@@ -1,6 +1,14 @@
 import streamlit as st
 import yt_dlp
 import os
+import subprocess
+import sys
+
+# Har dafa run hote waqt yt-dlp ko latest security bypass version par update karne ke liye
+try:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"])
+except Exception as e:
+    pass
 
 # Page Configuration
 st.set_page_config(
@@ -23,15 +31,13 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
     if not video_url:
         st.error("⚠️ Please paste a valid link first!")
     else:
-        with st.spinner("Processing video and audio... Please wait..."):
+        with st.spinner("Processing video... Please wait..."):
             try:
-                # Format logic update kiya hai taake mp4 video hi download ho
                 if "Best" in quality:
                     format_option = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
                 else:
                     format_option = 'worst[ext=mp4]/worst'
                 
-                # Output filename configuration
                 output_template = 'downloaded_video.mp4'
                 
                 ydl_opts = {
@@ -39,24 +45,23 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     'quiet': True,
                     'no_warnings': True,
                     'outtmpl': output_template,
-                    'merge_output_format': 'mp4',  # Audio/Video ko MP4 mein merge karne ke liye
+                    'merge_output_format': 'mp4',
+                    # Yeh headers Instagram aur TikTok dono ki blockings ko bypass karte hain
                     'http_headers': {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.9',
                         'Sec-Fetch-Mode': 'navigate',
                         'Connection': 'keep-alive',
                     },
                     'extractor_args': {
-                        'tiktok': {
-                            'web_page': True,
-                        }
+                        'tiktok': {'web_page': True},
+                        'instagram': {'check_connection': True}
                     }
                 }
 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info_dict = ydl.extract_info(video_url, download=True)
-                    # Agar filename kisi wajah se change ho jaye toh extension verify karne ke liye
                     filename = output_template if os.path.exists(output_template) else ydl.prepare_filename(info_dict)
                     video_title = info_dict.get('title', 'Downloaded Video')
 
@@ -69,7 +74,7 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     st.download_button(
                         label="💾 Click Here to Save to Your Device",
                         data=video_bytes,
-                        file_name="Universal_Downloader_Video.mp4", # User ke liye default naam
+                        file_name="Universal_Downloader_Video.mp4",
                         mime="video/mp4",
                         use_container_width=True
                     )
@@ -79,6 +84,7 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     st.error("❌ File processing error. Please try again.")
 
             except yt_dlp.utils.DownloadError as e:
-                st.error("🔒 Platform security temporarily active or invalid link. Please copy a fresh link and try again.")
+                # Asal error screen par dekhne ke liye taake pata chale masla kahan hai
+                st.error(f"🔒 Security Block: {str(e)}")
             except Exception as e:
                 st.error(f"⚠️ An unexpected error occurred: {str(e)}")
