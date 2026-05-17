@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 
-# yt-dlp ko automatic background mein update rakhne ke liye
+# background mein yt-dlp ko latest version par rakhne ke liye
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"])
 except Exception as e:
@@ -45,11 +45,10 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     'no_warnings': True,
                     'outtmpl': output_template,
                     'merge_output_format': 'mp4',
-                    # Agar cookies file maujood ho toh YouTube 403 error nahi dega
-                    'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['android', 'web'], # Mobile app spoofing
+                            # Yeh line YouTube 403 Forbidden error ko bina cookies ke bypass karegi
+                            'player_client': ['android', 'web'],
                             'skip': ['dash', 'hls']
                         },
                         'tiktok': {'web_page': True}
