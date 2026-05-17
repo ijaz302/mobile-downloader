@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 
-# yt-dlp ko latest version par update karna lazmi hai is bypass ke liye
+# yt-dlp ko latest features ke sath active rakhne ke liye
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"])
 except Exception as e:
@@ -45,17 +45,19 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     'no_warnings': True,
                     'outtmpl': output_template,
                     'merge_output_format': 'mp4',
-                    # NO COOKIES NEEDED - Client impersonation handles it
+                    # Agar aap cookies text file banati hain toh yeh khud hi utha lega
+                    'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['android', 'web'], # YouTube 403 block ko bypass karta hai
+                            'player_client': ['android', 'web'],
                             'skip': ['dash', 'hls']
                         },
                         'tiktok': {'web_page': True},
                         'instagram': {'check_connection': True}
                     },
                     'http_headers': {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                        # Instagram mobile requests ko zyada bypass karta hai
+                        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.9',
                         'Connection': 'keep-alive',
