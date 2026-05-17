@@ -19,9 +19,8 @@ if st.button("DOWNLOAD NOW"):
                 unique_filename = f"video_{timestamp}.mp4"
                 video_data = None
 
-                # Special Bypass for Instagram Links
+                # Special Bypass for Instagram Links (Using public mirror API)
                 if "instagram.com" in url:
-                    # Backup Method 1: Rapid API-free Endpoint
                     try:
                         api_url = f"https://api.vvesc.com/instagram?url={url}"
                         res = requests.get(api_url, timeout=8)
@@ -30,7 +29,7 @@ if st.button("DOWNLOAD NOW"):
                     except:
                         pass
 
-                # If Instagram special bypass didn't run, use the general high-quality downloader
+                # Fallback: Agar custom API na chale to standard yt_dlp backup run karega
                 if video_data is None:
                     ydl_opts = {
                         'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
@@ -49,17 +48,11 @@ if st.button("DOWNLOAD NOW"):
                             video_data = f.read()
                         os.remove(unique_filename)
 
-                # --- Displaying Output, Quality Info, and Save Button ---
+                # Output Display section with Quality Specs & Download Button
                 if video_data:
-                    st.success("✨ Video successfully fetched in best available quality!")
-                    
-                    # 1. Quality Display Info
+                    st.success("✨ Video successfully fetched!")
                     st.info("⚙️ Quality: **Auto-Selected Best (HD/MP4)**")
-                    
-                    # 2. Player Display
                     st.video(video_data)
-                    
-                    # 3. Save to Gallery Button
                     st.download_button(
                         label="📥 Save to Device / Gallery",
                         data=video_data,
@@ -67,9 +60,9 @@ if st.button("DOWNLOAD NOW"):
                         mime="video/mp4"
                     )
                 else:
-                    st.error("Video fetch nahi ho saki. Yeh link temporary restricted hai, please thodi dair baad koi doosra link check karein.")
+                    st.error("Video fetch nahi ho saki. Link check karein ya thodi dair baad koi doosra link try karein.")
 
         except Exception as e:
-            st.error(f"Server is busy! Please try a different video link or refresh the page.")
+            st.error("Server Busy! Please try again later or use another link.")
     else:
         st.warning("Pehle koi link paste karein!")
