@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 
-# yt-dlp ko latest features ke sath active rakhne ke liye
+# yt-dlp ko automatic background mein update rakhne ke liye
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"])
 except Exception as e:
@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 st.title("📱 Universal Mobile Downloader")
-st.markdown("Download high-quality videos from TikTok, Instagram, and YouTube instantly.")
+st.markdown("Download high-quality videos from TikTok and YouTube instantly.")
 
 quality = st.selectbox(
     "⚙️ Select Video Quality:",
@@ -45,19 +45,17 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     'no_warnings': True,
                     'outtmpl': output_template,
                     'merge_output_format': 'mp4',
-                    # Agar aap cookies text file banati hain toh yeh khud hi utha lega
+                    # Agar cookies file maujood ho toh YouTube 403 error nahi dega
                     'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['android', 'web'],
+                            'player_client': ['android', 'web'], # Mobile app spoofing
                             'skip': ['dash', 'hls']
                         },
-                        'tiktok': {'web_page': True},
-                        'instagram': {'check_connection': True}
+                        'tiktok': {'web_page': True}
                     },
                     'http_headers': {
-                        # Instagram mobile requests ko zyada bypass karta hai
-                        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.9',
                         'Connection': 'keep-alive',
@@ -88,6 +86,6 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     st.error("❌ File processing error. Please try again.")
 
             except yt_dlp.utils.DownloadError as e:
-                st.error(f"🔒 Security Block: {str(e)}")
+                st.error(f"🔒 Security Block/Invalid Link: {str(e)}")
             except Exception as e:
                 st.error(f"⚠️ An unexpected error occurred: {str(e)}")
