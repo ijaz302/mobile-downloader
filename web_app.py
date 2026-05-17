@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 
-# Auto-update yt-dlp for latest security patches
+# yt-dlp ko latest version par update karna lazmi hai is bypass ke liye
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"])
 except Exception as e:
@@ -45,18 +45,20 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     'no_warnings': True,
                     'outtmpl': output_template,
                     'merge_output_format': 'mp4',
-                    # Agar cookies file maujood ho toh usay use karein (YouTube 403 bypass ke liye)
-                    'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
-                    'http_headers': {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Sec-Fetch-Mode': 'navigate',
-                        'Connection': 'keep-alive',
-                    },
+                    # NO COOKIES NEEDED - Client impersonation handles it
                     'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android', 'web'], # YouTube 403 block ko bypass karta hai
+                            'skip': ['dash', 'hls']
+                        },
                         'tiktok': {'web_page': True},
                         'instagram': {'check_connection': True}
+                    },
+                    'http_headers': {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Connection': 'keep-alive',
                     }
                 }
 
