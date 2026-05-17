@@ -4,13 +4,12 @@ import os
 import subprocess
 import sys
 
-# Har dafa run hote waqt yt-dlp ko latest security bypass version par update karne ke liye
+# Auto-update yt-dlp for latest security patches
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"])
 except Exception as e:
     pass
 
-# Page Configuration
 st.set_page_config(
     page_title="Universal Mobile Downloader",
     page_icon="📱",
@@ -46,7 +45,8 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     'no_warnings': True,
                     'outtmpl': output_template,
                     'merge_output_format': 'mp4',
-                    # Yeh headers Instagram aur TikTok dono ki blockings ko bypass karte hain
+                    # Agar cookies file maujood ho toh usay use karein (YouTube 403 bypass ke liye)
+                    'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
                     'http_headers': {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
@@ -84,7 +84,6 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     st.error("❌ File processing error. Please try again.")
 
             except yt_dlp.utils.DownloadError as e:
-                # Asal error screen par dekhne ke liye taake pata chale masla kahan hai
                 st.error(f"🔒 Security Block: {str(e)}")
             except Exception as e:
                 st.error(f"⚠️ An unexpected error occurred: {str(e)}")
