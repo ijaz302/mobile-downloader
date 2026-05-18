@@ -1,119 +1,88 @@
-import streamlit as st
-import yt_dlp
-import requests
-import urllib.parse
-import random
-import time
-import re
 import os
+import subprocess
+from flask import Flask, render_template, request
 
-# Fake user-agents for bypassing security alerts
-USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1"
-]
+app = Flask(__name__)
 
-# Browser Tab Configuration
-st.set_page_config(
-    page_title="YouTube Video Downloader",
-    page_icon="🔻",
-    layout="centered"
-)
-
-# Main Headings
-st.title("🔻 YouTube Video Downloader")
-st.markdown("### Free. No signup. Download now.")
-
-# User Input Widgets
-quality = st.selectbox("⚙️ Select Video Quality:", ["720p (High)", "360p (Standard)"])
-video_url = st.text_input("Paste Video Link Here:", placeholder="https://www.youtube.com/watch?v=...")
-
-# URL filter function
-def clean_youtube_url(input_text):
-    url_match = re.search(r'(https?://(?:www\.)?(?:youtube\.com|youtu\.be)/[^\s]+)', input_text)
-    if url_match:
-        return url_match.group(0)
-    return input_text
-
-# Secure download logic
-def try_direct_download(url, quality_choice):
+# Server start hote hi yt-dlp ko automatic update karne ka function
+def update_ytdlp():
     try:
-        clean_url = clean_youtube_url(url)
-        time.sleep(random.uniform(1.0, 2.5))
-        
-        # Sab jhanjhat khatam, direct best file fetch karne ke liye
-        format_setting = 'best'
-
-        ydl_opts = {
-            'format': format_setting,
-            'outtmpl': 'downloads/%(title)s.%(ext)s',
-            'http_headers': {'User-Agent': random.choice(USER_AGENTS)},
-            'quiet': True,
-            'no_warnings': True,
-        }
-        
-        cookies_file = "cookies.txt"
-        if os.path.exists(cookies_file) and os.path.getsize(cookies_file) > 0:
-            ydl_opts['cookiefile'] = cookies_file
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(clean_url, download=True)
-            video_filename = ydl.prepare_filename(info_dict)
-            video_title = info_dict.get('title', 'YouTube_Video')
-            
-            # Baaz auqat extension badal sakti hai (jaise mkv ya webm), toh use safe handle karne ke liye:
-            if not os.path.exists(video_filename):
-                # Agar extension alag ho toh file sahi dhoondne ke liye:
-                base, _ = os.path.splitext(video_filename)
-                for f in os.listdir('downloads'):
-                    if f.startswith(os.path.basename(base)):
-                        video_filename = os.path.join('downloads', f)
-                        break
-
-            with open(video_filename, 'rb') as f:
-                video_bytes = f.read()
-                
-            os.remove(video_filename)
-            return True, video_bytes, video_title
-
+        print("Checking for yt-dlp updates...")
+        # Live server par bina rukawat update karne ke liye switch
+        subprocess.run(["pip", "install", "--upgrade", "yt-dlp"], check=True)
+        print("yt-dlp is up to date!")
     except Exception as e:
-        error_msg = str(e)
-        if "403" in error_msg or "Sign in" in error_msg:
-            return False, None, "Google Security Alert: Please update your cookies.txt file on GitHub."
-        return False, None, f"Kuch masla aaya hai. (Error: {error_msg})"
+        print(f"Update note: {e}")
 
-# Download Button
-if st.button("📥 Download"):
-    if video_url:
-        with st.spinner("Bypassing security and fetching video... Please wait..."):
-            success, result_data, details = try_direct_download(video_url, quality)
-            
-            if success:
-                st.success(f"✨ '{details}' successfully processed!")
-                st.download_button(
-                    label="💾 Click Here to Save Video",
-                    data=result_data,
-                    file_name=f"{details}.mp4",
-                    mime="video/mp4"
-                )
-            else:
-                st.error(details)
-    else:
-        st.warning("Pehle koi link toh paste karein!")
+# Run the update
+update_ytdlp()
 
-# Footer for SEO
-st.write("---")
-col1, col2 = st.columns(2)
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-with col1:
-    st.markdown("### 📥 Best YouTube Downloader")
-    st.write("Our tool helps you download high-quality YouTube videos and Shorts instantly without any registration or signup.")
+@app.route('/download', methods=['POST'])
+def download_video():
+    video_url = request.form.get('video_url')
+    if not video_url:
+        return "Error: Please provide a valid YouTube link.", 400
 
-with col2:
-    st.markdown("### ❓ Frequently Asked Questions")
-    with st.expander("Is this downloader free to use?"):
-        st.write("Yes, this tool is 100% free and requires no registration.")
-    with st.expander("Does it support mobile devices?"):
-        st.write("Absolutely! This app is fully optimized for mobile devices, tablets, and Chromebooks.")
+    try:
+        # YouTube security bypass configurations
+        command = [
+            'yt-dlp',
+            '-g',  # Direct downloadable link nikalne ke liye
+            '--no-playlist',
+            '--add-header', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            '-f', 'best',
+            video_url
+        ]
+
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        direct_download_url = result.stdout.strip()
+
+        # Success Page (SaveFrom Design Template)
+        return f"""
+        <html>
+        <head>
+            <title>Download Ready</title>
+            <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        </head>
+        <body class="bg-slate-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
+            <div class="text-center p-8 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 max-w-md w-full">
+                <span class="text-6xl">🎉</span>
+                <h2 class="text-2xl font-bold mt-4 mb-2 text-green-400">Video Link Ready!</h2>
+                <p class="text-gray-400 text-sm mb-6">Click the green button below to save your video directly.</p>
+                
+                <a href="{direct_download_url}" target="_blank" download class="bg-green-500 hover:bg-green-600 text-slate-900 font-bold px-6 py-4 rounded-xl text-lg block transition transform hover:scale-105 shadow-lg">
+                    🟢 Download Video Now
+                </a>
+                
+                <a href="/" class="text-sm text-gray-400 hover:text-white mt-6 block transition underline">
+                    ← Download Another Video
+                </a>
+            </div>
+        </body>
+        </html>
+        """
+
+    except subprocess.CalledProcessError as e:
+        error_msg = e.stderr if e.stderr else "Could not fetch stream links."
+        return f"""
+        <html>
+        <head><script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script></head>
+        <body class="bg-slate-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
+            <div class="text-center p-8 bg-slate-800 rounded-xl border border-red-500 max-w-md w-full">
+                <h2 class="text-2xl font-bold text-red-500 mb-2">⚠️ Download Failed</h2>
+                <p class="text-gray-300 text-sm mb-4">YouTube temporary block triggered. Please try again after 5 seconds.</p>
+                <p class="text-xs text-gray-500 bg-slate-950 p-2 rounded text-left overflow-x-auto">Log: {error_msg}</p>
+                <a href="/" class="text-sm text-green-400 hover:underline mt-4 block">← Go Back</a>
+            </div>
+        </body>
+        </html>
+        """
+
+if __name__ == '__main__':
+    # Cloud platform hosting port deployment setup
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
