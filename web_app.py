@@ -1,72 +1,111 @@
 import streamlit as st
+import yt_dlp
 import requests
 import urllib.parse
+import random
+import time
+import re
+import os
 
+# Fake user-agents for bypassing security alerts
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1"
+]
+
+# Browser Tab Configuration
 st.set_page_config(
-    page_title="Universal Mobile Downloader",
-    page_icon="📱",
+    page_title="YouTube Video Downloader",
+    page_icon="🔻",
     layout="centered"
 )
 
-st.title("📱 Universal Mobile Downloader")
-st.markdown("Download high-quality videos from TikTok, YouTube Shorts, and Instagram instantly.")
+# Main Headings
+st.title("🔻 YouTube Video Downloader")
+st.markdown("### Free. No signup. Download now.")
 
+# User Input Widgets
 quality = st.selectbox("⚙️ Select Video Quality:", ["720p (High)", "360p (Standard)"])
-video_url = st.text_input("Paste Video Link Here:", placeholder="https://...")
+video_url = st.text_input("Paste Video Link Here:", placeholder="https://www.youtube.com/watch?v=...")
 
-def try_direct_download(url):
-    """Koshish karein ke video isi page par download ho jaye"""
+# URL filter function
+def clean_youtube_url(input_text):
+    url_match = re.search(r'(https?://(?:www\.)?(?:youtube\.com|youtu\.be)/[^\s]+)', input_text)
+    if url_match:
+        return url_match.group(0)
+    return input_text
+
+# Secure download logic
+def try_direct_download(url, quality_choice):
     try:
-        # Using a fresh open network mirror
-        res = requests.post(
-            "https://co.wuk.sh/api/json",
-            json={"url": url.strip(), "videoQuality": "720"},
-            headers={"Accept": "application/json", "Content-Type": "application/json"},
-            timeout=6
-        )
-        if res.status_code == 200 and res.json().get("url"):
-            direct_url = res.json().get("url")
-            video_bytes = requests.get(direct_url, timeout=10)
-            if video_bytes.status_code == 200:
-                return video_bytes.content
-    except:
-        pass
-    return None
+        clean_url = clean_youtube_url(url)
+        time.sleep(random.uniform(1.0, 2.5))
+        
+        format_setting = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]'
+        if quality_choice == "360p (Standard)":
+            format_setting = 'worstvideo[ext=mp4]+worstaudio[ext=m4a]/worst[ext=mp4]'
 
-if st.button("DOWNLOAD NOW", use_container_width=True):
-    if not video_url:
-        st.error("⚠️ Please paste a valid link first!")
-    else:
-        with st.spinner("Processing your request stream..."):
+        ydl_opts = {
+            'format': format_setting,
+            'outtmpl': 'downloads/%(title)s.%(ext)s',
+            'http_headers': {'User-Agent': random.choice(USER_AGENTS)},
+            'quiet': True,
+            'no_warnings': True,
+        }
+        
+        cookies_file = "cookies.txt"
+        if os.path.exists(cookies_file) and os.path.getsize(cookies_file) > 0:
+            ydl_opts['cookiefile'] = cookies_file
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(clean_url, download=True)
+            video_filename = ydl.prepare_filename(info_dict)
+            video_title = info_dict.get('title', 'YouTube_Video')
             
-            # METHOD 1: Isi page par download karne ki koshish
-            file_data = try_direct_download(video_url)
+            with open(video_filename, 'rb') as f:
+                video_bytes = f.read()
+                
+            os.remove(video_filename)
+            return True, video_bytes, video_title
+
+    except Exception as e:
+        error_msg = str(e)
+        if "403" in error_msg or "Sign in" in error_msg:
+            return False, None, "Google Security Alert: Please update your cookies.txt file on GitHub."
+        return False, None, f"Request handled smoothly. (Error: {error_msg})"
+
+# Download Button
+if st.button("📥 Download"):
+    if video_url:
+        with st.spinner("Bypassing security and fetching video... Please wait..."):
+            success, result_data, details = try_direct_download(video_url, quality)
             
-            if file_data:
-                st.success("🎉 Video Processed Successfully on this Page!")
+            if success:
+                st.success(f"✨ '{details}' successfully processed!")
                 st.download_button(
-                    label="💾 Click Here to Save to Gallery",
-                    data=file_data,
-                    file_name="Downloaded_Video.mp4",
-                    mime="video/mp4",
-                    use_container_width=True
+                    label="💾 Click Here to Save Video",
+                    data=result_data,
+                    file_name=f"{details}.mp4",
+                    mime="video/mp4"
                 )
-                st.balloons()
             else:
-                # METHOD 2: Agar backend block ho, toh gande error ke bajaye smart button show ho
-                st.info("💡 Direct server traffic is high. Opening high-speed secure download gateway for you!")
-                
-                encoded_url = urllib.parse.quote(video_url.strip(), safe='')
-                # Direct parsing link jahan automatic video scan ho jayegi
-                backup_gateway = f"https://publer.io/tools/media-downloader?url={encoded_url}"
-                
-                st.markdown(
-                    f'<a href="{backup_gateway}" target="_blank" style="'
-                    f'display: block; width: 100%; text-align: center; '
-                    f'background-color: #24a0ed; color: white; padding: 15px; '
-                    f'text-decoration: none; border-radius: 8px; font-weight: bold; '
-                    f'font-size: 16px;'
-                    f'">📥 Click Here to Save Video (Premium Route)</a>',
-                    unsafe_allow_html=True
-                )
-                st.write("✨ *Note: Is button par click karte hi aapki video pehle se load milegi, bas direct save kar lein!*")
+                st.error(details)
+    else:
+        st.warning("Pehle koi link toh paste karein!")
+
+# Footer for SEO
+st.write("---")
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("### 📥 Best YouTube Downloader")
+    st.write("Our tool helps you download high-quality YouTube videos and Shorts instantly without any registration or signup.")
+
+with col2:
+    st.markdown("### ❓ Frequently Asked Questions")
+    with st.expander("Is this downloader free to use?"):
+        st.write("Yes, this tool is 100% free and requires no registration.")
+    with st.expander("Does it support mobile devices?"):
+        st.write("Absolutely! This app is fully optimized for mobile devices, tablets, and Chromebooks.")
