@@ -22,12 +22,12 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
             # URL ko safe format mein convert karne ke liye
             encoded_url = urllib.parse.quote(video_url.strip(), safe='')
             
-            # 100% working direct bypass link generate karna
+            # Direct link generate karna
             bypass_download_url = f"https://cobalt.tools/?url={encoded_url}"
             
             st.success("🎉 Download Link Successfully Generated!")
             
-            # Beautiful Premium Button jo direct working page kholega
+            # FIXED LINE: Changed unsafe_allow_code to unsafe_allow_html
             st.markdown(
                 f'<a href="{bypass_download_url}" target="_blank" style="'
                 f'display: block; width: 100%; text-align: center; '
@@ -35,7 +35,7 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                 f'text-decoration: none; border-radius: 8px; font-weight: bold; '
                 f'font-size: 16px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);'
                 f'">📥 Click Here to Download & Save Video</a>',
-                unsafe_allow_code=True
+                unsafe_allow_html=True
             )
             
             st.info("💡 Note: Upar wale button par click karte hi aapki video direct fetch ho jayegi, bas wahan download arrow par click kar lein!")
