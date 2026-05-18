@@ -43,9 +43,12 @@ def try_direct_download(url, quality_choice):
         clean_url = clean_youtube_url(url)
         time.sleep(random.uniform(1.0, 2.5))
         
-        format_setting = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]'
+        # SHORTS AUR VIDEOS DONO KE LIYE COMPATIBLE FORMAT LIST (Bina error block kiye)
         if quality_choice == "360p (Standard)":
-            format_setting = 'worstvideo[ext=mp4]+worstaudio[ext=m4a]/worst[ext=mp4]'
+            format_setting = 'worstvideo[ext=mp4]+worstaudio[ext=m4a]/worst[ext=mp4]/worst'
+        else:
+            # Pehle best mp4 try karega, agar Shorts hui toh single best file utha lega automatically
+            format_setting = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
 
         ydl_opts = {
             'format': format_setting,
@@ -64,6 +67,15 @@ def try_direct_download(url, quality_choice):
             video_filename = ydl.prepare_filename(info_dict)
             video_title = info_dict.get('title', 'YouTube_Video')
             
+            # Baaz auqat extension badal sakti hai (jaise mkv ya webm), toh use safe handle karne ke liye:
+            if not os.path.exists(video_filename):
+                # Agar extension alag ho toh file sahi dhoondne ke liye:
+                base, _ = os.path.splitext(video_filename)
+                for f in os.listdir('downloads'):
+                    if f.startswith(os.path.basename(base)):
+                        video_filename = os.path.join('downloads', f)
+                        break
+
             with open(video_filename, 'rb') as f:
                 video_bytes = f.read()
                 
@@ -74,7 +86,7 @@ def try_direct_download(url, quality_choice):
         error_msg = str(e)
         if "403" in error_msg or "Sign in" in error_msg:
             return False, None, "Google Security Alert: Please update your cookies.txt file on GitHub."
-        return False, None, f"Request handled smoothly. (Error: {error_msg})"
+        return False, None, f"Kuch masla aaya hai. (Error: {error_msg})"
 
 # Download Button
 if st.button("📥 Download"):
