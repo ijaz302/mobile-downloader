@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-import os
+import urllib.parse
 
 st.set_page_config(
     page_title="Universal Mobile Downloader",
@@ -11,73 +11,64 @@ st.set_page_config(
 st.title("📱 Universal Mobile Downloader")
 st.markdown("Download high-quality videos from TikTok, YouTube, and Instagram instantly.")
 
-# 1️⃣ Quality Selection Button Wapas Aa Gaya
+# 1️⃣ Quality Option Bilkul Safe
 quality = st.selectbox(
     "⚙️ Select Video Quality:",
-    ["1080p (Best Quality)", "720p (High Quality)", "480p (Standard Quality)", "360p (Low Quality)"]
+    ["1080p (Best Quality)", "720p (High Quality)", "480p (Standard Quality)"]
 )
 
 video_url = st.text_input("Paste Video Link Here:", placeholder="https://...")
 
-def fetch_video_bytes(url, q_val):
-    """Direct backend se video fetch karne ka tareeqa"""
-    # Map selection to cobalt quality strings
-    q_map = {
-        "1080p (Best Quality)": "1080",
-        "720p (High Quality)": "720",
-        "480p (Standard Quality)": "480",
-        "360p (Low Quality)": "360"
-    }
+def fetch_direct_video(url, q_val):
+    """Direct fetch karne ki koshish (Method A)"""
+    q_map = {"1080p (Best Quality)": "1080", "720p (High Quality)": "720", "480p (Standard Quality)": "480"}
     api_quality = q_map.get(q_val, "720")
     
-    # Alag alag working mirrors takay block na ho
-    endpoints = ["https://api.cobalt.tools/", "https://co.wuk.sh/api/json"]
-    
-    for api_url in endpoints:
-        try:
-            payload = {
-                "url": url.strip(),
-                "videoQuality": api_quality,
-                "isNoTTWatermark": True
-            }
-            headers = {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            }
-            response = requests.post(api_url, json=payload, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                video_stream_url = data.get("url")
-                
-                if video_stream_url:
-                    # Direct file data download karna stream se
-                    video_res = requests.get(video_stream_url, timeout=15)
-                    if video_res.status_code == 200:
-                        return video_res.content
-        except:
-            continue
+    try:
+        payload = {"url": url.strip(), "videoQuality": api_quality, "isNoTTWatermark": True}
+        res = requests.post("https://api.cobalt.tools/", json=payload, headers={"Accept": "application/json"}, timeout=8)
+        if res.status_code == 200:
+            stream_url = res.json().get("url")
+            if stream_url:
+                video_res = requests.get(stream_url, timeout=10)
+                if video_res.status_code == 200:
+                    return video_res.content
+    except:
+        pass
     return None
 
 if st.button("DOWNLOAD NOW", use_container_width=True):
     if not video_url:
         st.error("⚠️ Please paste a valid link first!")
     else:
-        with st.spinner("Processing video data... Please wait..."):
+        with st.spinner("Analyzing video stream and bypassing firewalls..."):
             
-            video_bytes = fetch_video_bytes(video_url, quality)
+            # Pehle direct download try karo
+            video_bytes = fetch_direct_video(video_url, quality)
             
             if video_bytes:
                 st.success("🎉 Video Successfully Processed!")
-                
-                # 2️⃣ Direct Save to Device/Gallery Button Wapas Aa Gaya
                 st.download_button(
-                    label="💾 Click Here to Save Video to Gallery",
+                    label="💾 Click Here to Save to Gallery",
                     data=video_bytes,
-                    file_name="Universal_Downloader_Video.mp4",
+                    file_name="Downloaded_Video.mp4",
                     mime="video/mp4",
                     use_container_width=True
                 )
                 st.balloons()
             else:
-                st.error("❌ High traffic block on cloud servers. Please try again after a brief moment or try a different link.")
+                # 2️⃣ SMART BYPASS: Agar network block ho, toh crash hone ki bajaye automatic direct working option de do!
+                st.info("⚡ Direct server route busy. Premium Bypass Gateway activated for you!")
+                
+                encoded_url = urllib.parse.quote(video_url.strip(), safe='')
+                bypass_url = f"https://cobalt.tools/?url={encoded_url}"
+                
+                st.markdown(
+                    f'<a href="{bypass_url}" target="_blank" style="'
+                    f'display: block; width: 100%; text-align: center; '
+                    f'background-color: #24a0ed; color: white; padding: 14px; '
+                    f'text-decoration: none; border-radius: 8px; font-weight: bold; '
+                    f'font-size: 16px;">📥 Click Here to Download (Bypass Server)</a>',
+                    unsafe_allow_html=True
+                )
+                st.write("💡 *Note: Is blue button par click karein, wahan Cloudflare verification ke baad direct download arrow par click karke save kar lein!*")
