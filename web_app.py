@@ -20,15 +20,16 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
     else:
         with st.spinner("Processing video via premium bypass server... Please wait..."):
             try:
-                # Using open-source robust Cobalt API instances
+                # Clean URL (extra parameters hatane ke liye)
+                clean_url = video_url.split("?")[0].strip()
+                
+                # Using a very stable public Cobalt API instance
                 cobalt_api_url = "https://api.cobalt.tools/"
                 
                 payload = {
-                    "url": video_url,
-                    "videoQuality": "1080", # Best quality format
-                    "audioFormat": "mp3",
-                    "isAudioOnly": False,
-                    "isNoTTWatermark": True # TikTok without watermark
+                    "url": clean_url,
+                    "videoQuality": "720", # 720p is highly compatible and fast
+                    "isNoTTWatermark": True
                 }
                 
                 headers = {
@@ -42,28 +43,25 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                     data = response.json()
                     status = data.get("status")
                     
-                    if status == "redirect" or status == "stream":
+                    if status in ["redirect", "stream"]:
                         download_link = data.get("url")
                         
                         st.success("🎉 Video Successfully Processed!")
-                        # Creating a clear beautiful download button link
                         st.markdown(
                             f'<a href="{download_link}" target="_blank" style="'
                             f'display: block; width: 100%; text-align: center; '
-                            f'background-color: #24a0ed; color: white; padding: 10px; '
+                            f'background-color: #24a0ed; color: white; padding: 12px; '
                             f'text-decoration: none; border-radius: 5px; font-weight: bold;'
-                            f'">📥 Click Here to Save Video to Your Device</a>',
+                            f'">📥 Click Here to Save Video</a>',
                             unsafe_allow_code=True
                         )
                         st.balloons()
                     elif status == "error":
                         st.error(f"❌ Server Error: {data.get('text', 'Could not process video.')}")
                     else:
-                        st.error("⚠️ Unexpected response from download server. Please try again.")
+                        st.error("⚠️ Unexpected response. Please try a different link.")
                 else:
-                    st.error(f"🔒 Security Block: Cloud server rejected request (Status Code: {response.status_code})")
+                    st.error(f"🔒 Platform Security Block (Status {response.status_code}). Please try a YouTube or TikTok link.")
                     
-            except requests.exceptions.Timeout:
-                st.error("⏱️ Connection timeout! The video platform took too long to respond. Please try again.")
             except Exception as e:
                 st.error(f"⚠️ An unexpected error occurred: {str(e)}")
