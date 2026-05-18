@@ -13,78 +13,44 @@ st.markdown("Download high-quality videos from TikTok and YouTube instantly.")
 
 video_url = st.text_input("Paste Video Link Here:", placeholder="https://...")
 
-def extract_video_id(url):
-    """YouTube URL se Video ID nikalne ka tareeqa"""
-    match = re.search(r'(?:v=|\/shorts\/|\/embed\/|\/v\/|youtu\.be\/|\/v=|^)([^#\&\?^\/]+)', url)
-    return match.group(1) if match else None
-
-# 1️⃣ METHOD A: Cobalt API Instance 1
-def try_cobalt_primary(url):
+def download_via_premium_gateway(url):
+    """SaveFrom API gateway jo kabhi block nahi hota"""
     try:
-        response = requests.post(
-            "https://api.cobalt.tools/",
-            json={"url": url, "videoQuality": "720", "isNoTTWatermark": True},
-            headers={"Accept": "application/json", "Content-Type": "application/json"},
-            timeout=8
-        )
-        if response.status_code == 200 and response.json().get("status") in ["redirect", "stream"]:
-            return response.json().get("url")
+        api_url = "https://worker.sf-api.com/savefrom.php"
+        payload = {"url": url}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Origin": "https://en.savefrom.net",
+            "Referer": "https://en.savefrom.net/"
+        }
+        response = requests.post(api_url, data=payload, headers=headers, timeout=12)
+        if response.status_code == 200:
+            # Response mein se video link extract karna
+            text = response.text
+            links = re.findall(r'url["\']\s*:\s*["\'](http[^"\']+)["\']', text)
+            if links:
+                return links[0]
     except:
         pass
-    return None
-
-# 2️⃣ METHOD B: Cobalt API Alternative Instance 2
-def try_cobalt_secondary(url):
-    try:
-        response = requests.post(
-            "https://co.wuk.sh/api/json",
-            json={"url": url, "videoQuality": "720"},
-            headers={"Accept": "application/json", "Content-Type": "application/json"},
-            timeout=8
-        )
-        if response.status_code == 200 and response.json().get("url"):
-            return response.json().get("url")
-    except:
-        pass
-    return None
-
-# 3️⃣ METHOD C: Invidious API Server (Sirf YouTube ke liye specialized)
-def try_invidious(url):
-    video_id = extract_video_id(url)
-    if not video_id:
-        return None
-    # 3 mukhtalif public invidious servers check karega auto-rotation mein
-    servers = ["https://invidious.nerdvpn.de", "https://yewtu.be", "https://iv.melmac.space"]
-    for server in servers:
-        try:
-            res = requests.get(f"{server}/api/v1/videos/{video_id}", timeout=5)
-            if res.status_code == 200:
-                streams = res.json().get("formatStreams", [])
-                if streams:
-                    return streams[0].get("url")
-        except:
-            continue
     return None
 
 if st.button("DOWNLOAD NOW", use_container_width=True):
     if not video_url:
         st.error("⚠️ Please paste a valid link first!")
     else:
-        with st.spinner("Connecting to secure high-speed download servers..."):
-            download_link = None
+        with st.spinner("Bypassing platform security... Fetching your video..."):
+            # Try Premium Gateway first
+            download_link = download_via_premium_gateway(video_url)
             
-            # Sub se pehle Primary Server check karo
-            download_link = try_cobalt_primary(video_url)
-            
-            # Agar primary fail ho, toh Secondary Server check karo
+            # Backup: Simple alternative scrap if premium lags
             if not download_link:
-                download_link = try_cobalt_secondary(video_url)
-                
-            # Agar dono fail hon aur link YouTube ka ho, toh Invidious direct stream uthao
-            if not download_link and ("youtube" in video_url or "youtu.be" in video_url):
-                download_link = try_invidious(video_url)
+                try:
+                    res = requests.post("https://api.cobalt.tools/", json={"url": video_url, "videoQuality": "720"}, timeout=5)
+                    if res.status_code == 200 and res.json().get("status") in ["redirect", "stream"]:
+                        download_link = res.json().get("url")
+                except:
+                    pass
 
-            # Final Result Display
             if download_link:
                 st.success("🎉 Video Successfully Processed!")
                 st.markdown(
@@ -97,4 +63,4 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
                 )
                 st.balloons()
             else:
-                st.error("❌ Servers are busy right now due to high traffic. Please refresh or try another link in a few moments.")
+                st.error("❌ Link is protected or temporary unavailable. Please check the link or try another one.")
