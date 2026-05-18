@@ -43,12 +43,8 @@ def try_direct_download(url, quality_choice):
         clean_url = clean_youtube_url(url)
         time.sleep(random.uniform(1.0, 2.5))
         
-        # SHORTS AUR VIDEOS DONO KE LIYE COMPATIBLE FORMAT LIST (Bina error block kiye)
-        if quality_choice == "360p (Standard)":
-            format_setting = 'worstvideo[ext=mp4]+worstaudio[ext=m4a]/worst[ext=mp4]/worst'
-        else:
-            # Pehle best mp4 try karega, agar Shorts hui toh single best file utha lega automatically
-            format_setting = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+        # Sab jhanjhat khatam, direct best file fetch karne ke liye
+        format_setting = 'best'
 
         ydl_opts = {
             'format': format_setting,
