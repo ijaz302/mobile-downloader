@@ -1,14 +1,5 @@
 import streamlit as st
-import yt_dlp
-import os
-import subprocess
-import sys
-
-# background mein yt-dlp ko latest version par rakhne ke liye
-try:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"])
-except Exception as e:
-    pass
+import requests
 
 st.set_page_config(
     page_title="Universal Mobile Downloader",
@@ -19,10 +10,7 @@ st.set_page_config(
 st.title("📱 Universal Mobile Downloader")
 st.markdown("Download high-quality videos from TikTok and YouTube instantly.")
 
-quality = st.selectbox(
-    "⚙️ Select Video Quality:",
-    ["Best Quality (HD/1080p)", "Standard Quality (SD/480p)"]
-)
+st.info("💡 Copy your video link, paste it below, and get a direct download link instantly!")
 
 video_url = st.text_input("Paste Video Link Here:", placeholder="https://...")
 
@@ -30,61 +18,52 @@ if st.button("DOWNLOAD NOW", use_container_width=True):
     if not video_url:
         st.error("⚠️ Please paste a valid link first!")
     else:
-        with st.spinner("Processing video... Please wait..."):
+        with st.spinner("Processing video via premium bypass server... Please wait..."):
             try:
-                if "Best" in quality:
-                    format_option = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
-                else:
-                    format_option = 'worst[ext=mp4]/worst'
+                # Using open-source robust Cobalt API instances
+                cobalt_api_url = "https://api.cobalt.tools/"
                 
-                output_template = 'downloaded_video.mp4'
-                
-                ydl_opts = {
-                    'format': format_option,
-                    'quiet': True,
-                    'no_warnings': True,
-                    'outtmpl': output_template,
-                    'merge_output_format': 'mp4',
-                    'extractor_args': {
-                        'youtube': {
-                            # Yeh line YouTube 403 Forbidden error ko bina cookies ke bypass karegi
-                            'player_client': ['android', 'web'],
-                            'skip': ['dash', 'hls']
-                        },
-                        'tiktok': {'web_page': True}
-                    },
-                    'http_headers': {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Connection': 'keep-alive',
-                    }
+                payload = {
+                    "url": video_url,
+                    "videoQuality": "1080", # Best quality format
+                    "audioFormat": "mp3",
+                    "isAudioOnly": False,
+                    "isNoTTWatermark": True # TikTok without watermark
                 }
-
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info_dict = ydl.extract_info(video_url, download=True)
-                    filename = output_template if os.path.exists(output_template) else ydl.prepare_filename(info_dict)
-                    video_title = info_dict.get('title', 'Downloaded Video')
-
-                if os.path.exists(filename):
-                    with open(filename, "rb") as file:
-                        video_bytes = file.read()
+                
+                headers = {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                }
+                
+                response = requests.post(cobalt_api_url, json=payload, headers=headers, timeout=15)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    status = data.get("status")
                     
-                    st.success(f"🎉 Video Successfully Fetched: **{video_title}**")
-                    
-                    st.download_button(
-                        label="💾 Click Here to Save to Your Device",
-                        data=video_bytes,
-                        file_name="Universal_Downloader_Video.mp4",
-                        mime="video/mp4",
-                        use_container_width=True
-                    )
-                    
-                    os.remove(filename)
+                    if status == "redirect" or status == "stream":
+                        download_link = data.get("url")
+                        
+                        st.success("🎉 Video Successfully Processed!")
+                        # Creating a clear beautiful download button link
+                        st.markdown(
+                            f'<a href="{download_link}" target="_blank" style="'
+                            f'display: block; width: 100%; text-align: center; '
+                            f'background-color: #24a0ed; color: white; padding: 10px; '
+                            f'text-decoration: none; border-radius: 5px; font-weight: bold;'
+                            f'">📥 Click Here to Save Video to Your Device</a>',
+                            unsafe_allow_code=True
+                        )
+                        st.balloons()
+                    elif status == "error":
+                        st.error(f"❌ Server Error: {data.get('text', 'Could not process video.')}")
+                    else:
+                        st.error("⚠️ Unexpected response from download server. Please try again.")
                 else:
-                    st.error("❌ File processing error. Please try again.")
-
-            except yt_dlp.utils.DownloadError as e:
-                st.error(f"🔒 Security Block/Invalid Link: {str(e)}")
+                    st.error(f"🔒 Security Block: Cloud server rejected request (Status Code: {response.status_code})")
+                    
+            except requests.exceptions.Timeout:
+                st.error("⏱️ Connection timeout! The video platform took too long to respond. Please try again.")
             except Exception as e:
                 st.error(f"⚠️ An unexpected error occurred: {str(e)}")
