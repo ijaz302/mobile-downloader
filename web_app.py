@@ -1,40 +1,29 @@
 import streamlit as st
-import yt_dlp
-import os
+import requests
 
-st.set_page_config(page_title="TikTok Downloader Pro")
+st.set_page_config(page_title="TikTok Downloader Pro", layout="centered")
 st.title("TikTok Video Downloader")
 
 url = st.text_input("Enter TikTok URL here")
 
 if url:
     if st.button("Download Now"):
-        with st.spinner('Downloading... please wait.'):
+        with st.spinner('Fetching Video...'):
             try:
-                # TikTok ke liye best stream ka path force karna
-                ydl_opts = {
-                    'format': 'best',
-                    'outtmpl': 'video.mp4',
-                    'noplaylist': True,
-                    'user_agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
-                }
+                # TikTok Downloader API (No Watermark)
+                api = f"https://www.tikwm.com/api/?url={url}"
+                res = requests.get(api).json()
                 
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([url])
-                
-                if os.path.exists('video.mp4'):
-                    # Video play karein
-                    st.video('video.mp4')
+                if res.get('code') == 0:
+                    video_data = res['data']
+                    video_url = video_data['play'] # Direct video URL
                     
-                    # File save karne ka option
-                    with open('video.mp4', "rb") as file:
-                        st.download_button(
-                            label="⬇️ Save to Gallery",
-                            data=file,
-                            file_name="tiktok_video.mp4",
-                            mime="video/mp4"
-                        )
-                    st.success("Download mukammal hua!")
+                    st.success("Video mil gayi!")
+                    st.video(video_url)
+                    
+                    # Direct link for gallery save
+                    st.markdown(f'<a href="{video_url}" target="_blank" style="display: block; text-align: center; background: #ff4b4b; color: white; padding: 15px; border-radius: 10px; text-decoration: none; font-weight: bold;">⬇️ Save Video to Gallery</a>', unsafe_allow_html=True)
+                else:
+                    st.error("Video nahi mil saki. Link check karein.")
             except Exception as e:
                 st.error(f"Error: {e}")
-                st.info("Agar video nahi chal rahi, toh iska matlab server par video stream support nahi hai.")
