@@ -2,7 +2,7 @@ import streamlit as st
 import yt_dlp
 import os
 
-st.set_page_config(page_title="Pro TikTok Downloader")
+st.set_page_config(page_title="TikTok Downloader Pro")
 st.title("TikTok Downloader Pro")
 
 url = st.text_input("Enter TikTok URL here")
@@ -10,16 +10,21 @@ url = st.text_input("Enter TikTok URL here")
 if url:
     try:
         with st.spinner('Fetching Video...'):
-            ydl_opts = {'format': 'best', 'outtmpl': 'temp_video.mp4'}
+            # TikTok ke liye best option jo bina FFmpeg ke chal sake
+            ydl_opts = {
+                'format': 'best', 
+                'outtmpl': 'temp_video.mp4',
+                'noplaylist': True,
+            }
+            
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
             
-            # Video display karein taake aap check kar sakein
+            # Agar file download ho gayi hai toh play karein
             if os.path.exists('temp_video.mp4'):
                 st.video('temp_video.mp4')
-                st.success("Video load ho gayi! Ab niche se save karein.")
                 
-                # Save to Gallery/Device Option
+                # Save button
                 with open('temp_video.mp4', "rb") as file:
                     st.download_button(
                         label="⬇️ Save to Gallery / Download",
