@@ -2,34 +2,31 @@ import streamlit as st
 import yt_dlp
 import os
 
-st.set_page_config(page_title="TikTok Downloader")
-st.title("TikTok Video Downloader")
+st.set_page_config(page_title="Pro TikTok Downloader")
+st.title("TikTok Downloader Pro")
 
 url = st.text_input("Enter TikTok URL here")
 
 if url:
-    if st.button("Download Now"):
-        st.write("Processing... please wait.")
-        try:
-            # TikTok ke liye format 'best' hi rakhein, ye bina merge kiye download karega
-            ydl_opts = {
-                'format': 'best',
-                'outtmpl': 'tiktok_video.mp4',
-                'noplaylist': True,
-            }
-            
+    try:
+        with st.spinner('Fetching Video...'):
+            ydl_opts = {'format': 'best', 'outtmpl': 'temp_video.mp4'}
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
             
-            if os.path.exists('tiktok_video.mp4'):
-                with open('tiktok_video.mp4', "rb") as file:
+            # Video display karein taake aap check kar sakein
+            if os.path.exists('temp_video.mp4'):
+                st.video('temp_video.mp4')
+                st.success("Video load ho gayi! Ab niche se save karein.")
+                
+                # Save to Gallery/Device Option
+                with open('temp_video.mp4', "rb") as file:
                     st.download_button(
-                        label="Download Full Video",
+                        label="⬇️ Save to Gallery / Download",
                         data=file,
                         file_name="tiktok_video.mp4",
                         mime="video/mp4"
                     )
-                st.success("Video ready to download!")
-                
-        except Exception as e:
-            st.error(f"Error: {e}")
+                    
+    except Exception as e:
+        st.error(f"Error: {e}")
