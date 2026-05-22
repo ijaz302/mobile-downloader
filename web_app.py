@@ -4,7 +4,7 @@ import google.generativeai as genai
 
 # --- API CONFIG ---
 # Agar Secrets mein key nahi dali, to yahan apni API Key paste karein
-API_KEY = st.secrets.get("GOOGLE_API_KEY", "PASTE_YOUR_ASLI_API_KEY_HERE")
+API_KEY = st.secrets.get("GOOGLE_API_KEY", "AIzaSyCUdLxGuryJRVM9VCowN5z1Ua5ycXv1qT4")
 
 genai.configure(api_key=API_KEY)
 
