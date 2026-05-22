@@ -4,12 +4,12 @@ import google.generativeai as genai
 
 # --- API CONFIG ---
 # Agar Secrets mein key nahi dali, to yahan apni API Key paste karein
-API_KEY = st.secrets.get("GOOGLE_API_KEY", "AIzaSyCUdLxGuryJRVM9VCowN5z1Ua5ycXv1qT4")
+API_KEY = st.secrets.get("GOOGLE_API_KEY", "PASTE_YOUR_ASLI_API_KEY_HERE")
 
 genai.configure(api_key=API_KEY)
 
-# Model configuration - hum 'gemini-1.5-flash' use kar rahe hain
-model = genai.GenerativeModel('gemini-1.5-flash')
+# Yahan hum model change kar rahe hain 'gemini-1.0-pro' par
+model = genai.GenerativeModel('gemini-1.0-pro')
 
 # --- Page Setup ---
 st.set_page_config(page_title="AI Beauty & Downloader", layout="centered")
@@ -38,8 +38,8 @@ with tab2:
         if user_q:
             with st.spinner('AI is thinking...'):
                 try:
-                    # AI ko prompt de rahe hain
-                    response = model.generate_content(f"You are a professional makeup and skincare expert. Please answer this: {user_q}")
+                    # Yahan humne model ka usage simple rakha hai
+                    response = model.generate_content(f"You are a professional makeup and skincare expert. Answer this: {user_q}")
                     st.write(response.text)
                 except Exception as e:
-                    st.error(f"AI Error: {e}. Please check if your API Key has access to 'gemini-1.5-flash'.")
+                    st.error(f"Error: {e}. Agar ab bhi error aaye, to check karein ke API key sahi hai.")
