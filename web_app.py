@@ -3,42 +3,48 @@ import requests
 import google.generativeai as genai
 
 # --- API CONFIG ---
-# Yahan apni API Key daalein
-API_KEY = st.secrets.get("GOOGLE_API_KEY", "AIzaSyARMwXJJKN0lWceW4RZVjBsqYDaJnTXAKY")
-
+# Secrets mein key daalna sabse best hai
+API_KEY = st.secrets.get("GOOGLE_API_KEY", "PASTE_YOUR_API_KEY_HERE")
 genai.configure(api_key=API_KEY)
+model = genai.GenerativeModel('gemini-1.0-pro')
 
-# Sabse stable model call
-model = genai.GenerativeModel('gemini-1.5-flash')
+# Custom Design
+st.markdown("""
+    <style>
+    .big-font { font-size: 20px !important; font-weight: bold; }
+    </style>
+    """, unsafe_allow_html=True)
 
-st.set_page_config(page_title="AI Beauty & Downloader", layout="centered")
-st.title("✨ AI Beauty Assistant & Downloader")
+st.title("🚀 TikTok Video Downloader")
+st.markdown("Download TikTok videos in HD, without watermark.")
 
-tab1, tab2 = st.tabs(["🚀 TikTok Downloader", "💄 Ask Beauty AI"])
-
-with tab1:
-    url = st.text_input("Paste TikTok link:")
-    if st.button("Fetch & Download"):
-        if url:
+# --- Main Downloader ---
+url = st.text_input("Paste TikTok link here:", placeholder="https://www.tiktok.com/...")
+if st.button("Download Now"):
+    if url:
+        with st.spinner('Fetching your video...'):
             api = f"https://www.tikwm.com/api/?url={url}"
             res = requests.get(api).json()
             if res.get('code') == 0:
                 data = res['data']
                 st.video(data.get('play'))
-                st.markdown(f'[⬇️ Download]({data.get("play")})')
+                st.markdown(f'[⬇️ Click here to Download]({data.get("play")})')
             else:
-                st.error("Invalid URL.")
+                st.error("Invalid URL. Please check the link.")
 
-with tab2:
-    st.info("Ask me about makeup or skincare!")
-    user_q = st.text_input("Question:")
-    if st.button("Get AI Advice"):
+st.markdown("---")
+
+# --- AI Beauty Expert Section ---
+with st.expander("💄 Need Beauty/Makeup Advice?"):
+    user_q = st.text_input("Ask our Beauty AI:")
+    if st.button("Ask AI"):
         if user_q:
-            with st.spinner('Thinking...'):
-                try:
-                    # Model list check karne ki zaroorat nahi, seedha call
-                    response = model.generate_content(f"Answer as a beauty expert: {user_q}")
-                    st.write(response.text)
-                except Exception as e:
-                    # Agar abhi bhi error aaye, toh error message saaf dikhega
-                    st.error(f"Issue: {e}")
+            response = model.generate_content(f"You are a beauty expert. Answer: {user_q}")
+            st.write(response.text)
+
+# --- Professional FAQ Section (As per your video) ---
+st.subheader("Frequently Asked Questions")
+with st.expander("How to download TikTok video without watermark?"):
+    st.write("1. Copy the link from TikTok app. 2. Paste it in the input box above. 3. Click Download.")
+with st.expander("Is it free?"):
+    st.write("Yes, our downloader is completely free and unlimited.")
