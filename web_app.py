@@ -4,66 +4,58 @@ import requests
 # Layout: Wide aur clean
 st.set_page_config(page_title="TikTok Downloader", layout="wide")
 
-# CSS Styling: Professional Boxed Layout
+# CSS: Professional Purple/Modern Styling
 st.markdown("""
     <style>
-    /* Background Color */
-    .stApp { background-color: #f0f2f6; }
-    
-    /* Center Box Styling */
+    .stApp { background-color: #f8f9fa; }
     .main-box {
-        background-color: white;
-        padding: 30px;
+        background-color: #7b2cbf;
+        padding: 40px;
         border-radius: 20px;
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+        color: white;
         text-align: center;
+        box-shadow: 0px 10px 20px rgba(0,0,0,0.2);
     }
-    
-    /* Input Box styling */
     .stTextInput > div > div > input {
-        border: 2px solid #ff4b4b;
+        padding: 20px;
         border-radius: 10px;
-        padding: 15px;
+        border: none;
     }
-    
-    /* Download Button */
-    div.stButton > button {
-        background-color: #ff4b4b;
+    .stButton > button {
+        background-color: #3c096c;
         color: white;
         width: 100%;
-        padding: 10px;
+        padding: 15px;
         border-radius: 10px;
+        font-size: 18px;
         font-weight: bold;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Layout: Columns ka use karke centering
-col1, col2, col3 = st.columns([1, 2, 1])
+# Main Header Box
+st.markdown("<div class='main-box'>", unsafe_allow_html=True)
+st.title("🎬 TikTok Video Downloader")
+st.write("Download TikTok videos in HD, without watermark.")
 
-with col2:
-    st.markdown("<div class='main-box'>", unsafe_allow_html=True)
-    st.title("🎬 TikTok Downloader")
-    
-    url = st.text_input("Paste TikTok link:", placeholder="https://www.tiktok.com/...")
-    
-    if st.button("Download Now"):
-        if url:
-            with st.spinner('Fetching...'):
-                api = f"https://www.tikwm.com/api/?url={url}"
-                res = requests.get(api).json()
-                if res.get('code') == 0:
-                    st.video(res['data']['play'])
-                else:
-                    st.error("Invalid URL")
-    st.markdown("</div>", unsafe_allow_html=True)
+url = st.text_input("", placeholder="Paste TikTok link here...")
+if st.button("Download"):
+    if url:
+        with st.spinner('Fetching...'):
+            api = f"https://www.tikwm.com/api/?url={url}"
+            res = requests.get(api).json()
+            if res.get('code') == 0:
+                st.video(res['data']['play'])
+            else:
+                st.error("Invalid link!")
+st.markdown("</div>", unsafe_allow_html=True)
 
-    # How to section
-    st.subheader("How to use")
-    st.markdown("""
-    <div style='background: white; padding: 20px; border-radius: 15px;'>
-    1. Copy link from TikTok app.<br>
-    2. Paste above and click Download.<br>
-    3. Save video to your device.
-    </div>
-    """, unsafe_allow_html=True)
+# FAQ Section (Jaisa video mein tha)
+st.write("---")
+st.header("Frequently Asked Questions")
+with st.expander("How to download TikTok video without watermark?"):
+    st.write("1. Copy the video link from TikTok app. 2. Paste it in the box above. 3. Click Download.")
+with st.expander("Is this tool free?"):
+    st.write("Yes, our downloader is 100% free and unlimited.")
+with st.expander("Does it work on mobile?"):
+    st.write("Yes, it works perfectly on all mobile browsers.")
