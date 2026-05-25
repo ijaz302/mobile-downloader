@@ -1,48 +1,53 @@
 import streamlit as st
 import requests
 
-# Layout: Wide aur clean
-st.set_page_config(page_title="TikTok Downloader", layout="wide")
+# Page Config (SEO Title)
+st.set_page_config(page_title="Free TikTok Video Downloader - No Watermark", layout="centered")
 
-# CSS: Hard-coded colors for a professional look (White Cards on Grey Background)
-st.markdown("""
-    <style>
-    .stApp { background-color: #f0f2f6; }
-    .main-card {
-        background-color: white !important;
-        padding: 40px;
-        border-radius: 20px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
-        text-align: center;
-        color: #333;
-    }
-    h1 { color: #333 !important; }
-    </style>
-""", unsafe_allow_html=True)
+# SEO Header
+st.title("🚀 TikTok Video Downloader - No Watermark")
+st.write("Download your favorite TikTok videos in HD, MP4 format, and without any watermark. Fast, free, and secure.")
 
-# Main Container
-st.markdown("<div class='main-card'>", unsafe_allow_html=True)
-st.title("🎬 TikTok Video Downloader")
-st.write("Download HD TikTok videos without watermark.")
+# Input Field
+url = st.text_input("Paste your TikTok URL here:", placeholder="https://www.tiktok.com/@username/video/123456789")
 
-url = st.text_input("", placeholder="Paste TikTok link here...")
-
-# Button styling fix
 if st.button("Download Now"):
     if url:
-        with st.spinner('Fetching...'):
-            api = f"https://www.tikwm.com/api/?url={url}"
-            res = requests.get(api).json()
-            if res.get('code') == 0:
-                st.video(res['data']['play'])
-            else:
-                st.error("Invalid URL!")
-st.markdown("</div>", unsafe_allow_html=True)
+        with st.spinner('Fetching your video...'):
+            try:
+                api = f"https://www.tikwm.com/api/?url={url}"
+                res = requests.get(api).json()
+                if res.get('code') == 0:
+                    st.video(res['data']['play'])
+                    st.success("Success! Click on the video settings (three dots) to save.")
+                else:
+                    st.error("Invalid URL. Please check the link and try again.")
+            except:
+                st.error("Server error. Please try again.")
 
-# FAQ Section
 st.write("---")
-st.subheader("Frequently Asked Questions")
-with st.expander("Is this free?"):
-    st.write("Yes, 100% free.")
-with st.expander("How to use?"):
-    st.write("Copy link, paste, click download.")
+
+# SEO Rich FAQ Section (Google likes this!)
+st.header("Frequently Asked Questions (FAQs)")
+
+faq_data = {
+    "How to download TikTok videos without watermark?": "Copy the video link from TikTok, paste it in the box above, and click 'Download Now'.",
+    "Is this TikTok Downloader free?": "Yes, our tool is 100% free and you can download unlimited videos.",
+    "Do I need to install any app?": "No, this is a web-based tool. No installation is required.",
+    "Does it work on iPhone?": "Yes, it works perfectly on iPhone, Android, and PC browsers.",
+    "What quality are the videos?": "Videos are downloaded in the original resolution they were uploaded in.",
+    "Is my data safe?": "We do not store any of your videos or personal information."
+}
+
+for question, answer in faq_data.items():
+    with st.expander(question):
+        st.write(answer)
+
+# SEO Footer Content
+st.write("---")
+st.subheader("Why use our TikTok Downloader?")
+st.write("""
+Our downloader is the best solution for content creators and users who want to save TikToks 
+without the watermark. Whether you are using Windows, macOS, Android, or iOS, our tool 
+works seamlessly on all browsers. 
+""")
