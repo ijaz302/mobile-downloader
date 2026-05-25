@@ -1,46 +1,48 @@
 import streamlit as st
 import requests
 
-# Layout Setup
-st.set_page_config(page_title="TikTok Video Downloader", layout="centered")
+# Layout Config
+st.set_page_config(page_title="TikTok Video Downloader", layout="wide")
 
-# CSS for a professional look
+# CSS Styling (Professional Look)
 st.markdown("""
     <style>
-    .header { text-align: center; color: #333; }
-    .nav { text-align: center; margin-bottom: 20px; }
-    .footer { text-align: center; font-size: 12px; color: #777; margin-top: 50px; }
+    .main { background-color: #f5f5f5; }
+    .stApp { max-width: 800px; margin: 0 auto; }
+    .nav { text-align: center; padding: 10px; background: #fff; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
+    .download-box { background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     </style>
 """, unsafe_allow_html=True)
 
-# Header Navigation
+# Navigation Bar
 st.markdown("<div class='nav'>TikTok Downloader | Instagram Downloader | Twitter Downloader</div>", unsafe_allow_html=True)
-st.markdown("<h1 class='header'>TikTok Video Downloader</h1>", unsafe_allow_html=True)
 
-# Main Input
-url = st.text_input("Insert a link here:", placeholder="Paste your TikTok link...")
-if st.button("Download"):
-    if url:
-        api = f"https://www.tikwm.com/api/?url={url}"
-        res = requests.get(api).json()
-        if res.get('code') == 0:
-            st.video(res['data']['play'])
-        else:
-            st.error("Invalid link!")
-
-# Detailed Info Section (Jaisa video mein tha)
+# Main Title
+st.title("🎬 TikTok Video Downloader")
 st.write("---")
-st.subheader("How to download TikTok video without watermark?")
-st.write("1. **Find a TT**: Open the TikTok app and find the video.")
-st.write("2. **Copy the link**: Tap the Share button and select 'Copy link'.")
-st.write("3. **Save TikTok**: Paste the link in the box above and click Download.")
 
-# FAQ Section
-st.subheader("Frequently Asked Questions")
-with st.expander("Is TikTok download available in MP4 format?"):
-    st.write("Yes, all videos are downloaded in high-quality MP4 format.")
-with st.expander("Where are TikTok videos saved after downloading?"):
-    st.write("Videos are saved in your device's default 'Downloads' folder.")
+# Input Section with Container
+with st.container():
+    st.markdown("<div class='download-box'>", unsafe_allow_html=True)
+    url = st.text_input("Paste TikTok link here:", placeholder="https://www.tiktok.com/...")
+    if st.button("Download Now", use_container_width=True):
+        if url:
+            with st.spinner('Fetching...'):
+                try:
+                    api = f"https://www.tikwm.com/api/?url={url}"
+                    res = requests.get(api).json()
+                    if res.get('code') == 0:
+                        st.video(res['data']['play'])
+                        st.success("Success! You can watch your video below.")
+                    else:
+                        st.error("Invalid URL. Make sure it's a direct TikTok link.")
+                except Exception as e:
+                    st.error("Error connecting to server.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# FAQ/Guide Section
+st.write("## How to use")
+st.info("1. Copy the video link from TikTok.\n2. Paste it in the box above.\n3. Click Download and wait for the preview.")
 
 # Footer
-st.markdown("<div class='footer'>© 2026 TikTok Video Downloader. All rights reserved.</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center; margin-top: 50px; color: #888;'>© 2026 Professional Downloader Tool</div>", unsafe_allow_html=True)
